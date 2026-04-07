@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:mathdz/pages/profile_settings.dart';
+import 'package:mathdz/services/profile_status.dart';
 import 'package:path/path.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -15,8 +17,31 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  @override
+  void initState() {
+    super.initState();
+    _loadProfilePicture();
+  }
+
+  Future<void> _loadProfilePicture() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+
+      if (doc.exists && doc.data()?['profilePicture'] != null) {
+        if (!mounted) return;
+        setState(() {
+          profilePicturePath = doc.data()!['profilePicture'] as String;
+        });
+      }
+    }
+  }
+
   final user = FirebaseAuth.instance.currentUser;
-  String? profilePicturePath;
+  String profilePicturePath = 'assets/user.png';
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,9 +82,11 @@ class _ProfilePageState extends State<ProfilePage> {
                               }, SetOptions(merge: true));
                         }
 
-                        setState(() {
-                          profilePicturePath = savedImage.path;
-                        });
+                       setState(() {
+                                    profilePicturePath = savedImage.path;
+                                  });
+                                  ProfileStatus.profilePicturePath.value =
+                                      savedImage.path;
                       },
                       child: Container(
                         padding: const EdgeInsets.all(4),
@@ -67,10 +94,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           color: Colors.white,
                           shape: BoxShape.circle,
                         ),
-                        child: ProfileAvatar(
-                          imagePath: profilePicturePath,
-                          imageUrl: user?.photoURL,
-                        ),
+                        child: ProfileAvatar(imagePath: profilePicturePath),
                       ),
                     ),
                   ],
@@ -107,7 +131,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Icon(Icons.person, color: Colors.amber[700]),
                     ),
                     onTap: () {
-                      Navigator.pushNamed(context, "profilesettings");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProfileSettings(
+                            profilePicturePath: profilePicturePath,
+                          ),
+                        ),
+                      );
                     },
                   ),
                 ),

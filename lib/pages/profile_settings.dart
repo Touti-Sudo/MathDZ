@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:mathdz/components/profile_boxes.dart';
+import 'package:mathdz/services/profile_status.dart';
 import 'package:path/path.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,22 +10,29 @@ import 'package:mathdz/services/profile_avatare.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ProfileSettings extends StatefulWidget {
-  const ProfileSettings({super.key});
+  final String profilePicturePath;
+  const ProfileSettings({super.key, required this.profilePicturePath});
 
   @override
   State<ProfileSettings> createState() => _ProfileSettingsState();
 }
 
 class _ProfileSettingsState extends State<ProfileSettings> {
+  late String profilePicturePath;
   TextEditingController userNameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
-  String? profilePicturePath;
 
   @override
   void dispose() {
     userNameController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    profilePicturePath = widget.profilePicturePath;
   }
 
   @override
@@ -39,9 +47,9 @@ class _ProfileSettingsState extends State<ProfileSettings> {
         Navigator.pop(context);
       } on FirebaseAuthException catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message ?? 'فشل تسجيل الدخول')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? 'فشل تسجيل الدخول')),
+        );
       }
     }
 
@@ -160,6 +168,8 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                                   setState(() {
                                     profilePicturePath = savedImage.path;
                                   });
+                                  ProfileStatus.profilePicturePath.value =
+                                      savedImage.path;
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
@@ -169,7 +179,6 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                                   ),
                                   child: ProfileAvatar(
                                     imagePath: profilePicturePath,
-                                    imageUrl: user?.photoURL,
                                   ),
                                 ),
                               ),
@@ -184,35 +193,37 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                                       fontSize: 15,
                                     ),
                                   ),
-                                  onPressed:() async {
-                                  final picker = ImagePicker();
-                                  final pickedFile = await picker.pickImage(
-                                    source: ImageSource.gallery,
-                                  );
-                                  if (pickedFile == null) return;
+                                  onPressed: () async {
+                                    final picker = ImagePicker();
+                                    final pickedFile = await picker.pickImage(
+                                      source: ImageSource.gallery,
+                                    );
+                                    if (pickedFile == null) return;
 
-                                  final appDir =
-                                      await getApplicationDocumentsDirectory();
-                                  final fileName = basename(pickedFile.path);
-                                  final savedImage = await File(
-                                    pickedFile.path,
-                                  ).copy('${appDir.path}/$fileName');
+                                    final appDir =
+                                        await getApplicationDocumentsDirectory();
+                                    final fileName = basename(pickedFile.path);
+                                    final savedImage = await File(
+                                      pickedFile.path,
+                                    ).copy('${appDir.path}/$fileName');
 
-                                  final uid =
-                                      FirebaseAuth.instance.currentUser?.uid;
-                                  if (uid != null) {
-                                    await FirebaseFirestore.instance
-                                        .collection('users')
-                                        .doc(uid)
-                                        .set({
-                                          'profilePicture': savedImage.path,
-                                        }, SetOptions(merge: true));
-                                  }
+                                    final uid =
+                                        FirebaseAuth.instance.currentUser?.uid;
+                                    if (uid != null) {
+                                      await FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(uid)
+                                          .set({
+                                            'profilePicture': savedImage.path,
+                                          }, SetOptions(merge: true));
+                                    }
 
-                                  setState(() {
+                                   setState(() {
                                     profilePicturePath = savedImage.path;
                                   });
-                                },
+                                  ProfileStatus.profilePicturePath.value =
+                                      savedImage.path;
+                                  },
                                 ),
                               ),
                             ],

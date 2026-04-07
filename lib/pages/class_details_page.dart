@@ -69,7 +69,7 @@ class _ClassDetailsPageState extends State<ClassDetailsPage> {
 
   Future<void> fetchContent(String level) async {
     final jsonUrl =
-        "https://raw.githubusercontent.com/Touti-Sudo/MathDZ/refs/heads/main/$level.json"; 
+        "https://raw.githubusercontent.com/Touti-Sudo/MathDZ/refs/heads/main/$level.json";
 
     try {
       final response = await http.get(Uri.parse(jsonUrl));
@@ -202,7 +202,7 @@ class _ClassDetailsPageState extends State<ClassDetailsPage> {
                                     MaterialPageRoute(
                                       builder: (context) => ExamsPage(
                                         level: widget.level,
-                                        pdfList: list, 
+                                        pdfList: list,
                                         term: term,
                                       ),
                                     ),
@@ -243,34 +243,37 @@ class PdfViewerPage extends StatelessWidget {
   PdfViewerPage({super.key, required this.pdfUrl, required this.pdf});
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(pdf['name']),
-        actions: [
-          ValueListenableBuilder(
-            valueListenable: _mybox.listenable(),
-            builder: (context, box, _) {
-              final favData = box.get(pdfUrl, defaultValue: {'isFav': false});
-              final isFav = favData['isFav'] as bool;
-
-              return IconButton(
-                icon: Icon(
-                  isFav ? Icons.favorite : Icons.favorite_border,
-                  color: Colors.red,
-                ),
-                onPressed: () async {
-                  await box.put(pdfUrl, {
-                    'isFav': !isFav,
-                    'url': pdf['url'],
-                    'name': pdf['name'],
-                  });
-                },
-              );
-            },
-          ),
-        ],
+    return Directionality(textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(pdf['name']),
+          actions: [
+            ValueListenableBuilder(
+              valueListenable: _mybox.listenable(),
+              builder: (context, box, _) {
+                final isFav = box.containsKey(pdfUrl);
+                return IconButton(
+                  icon: Icon(
+                    isFav ? Icons.favorite : Icons.favorite_border,
+                    color: Colors.red,
+                  ),
+                  onPressed: () async {
+                    if (isFav) {
+                      await box.delete(pdfUrl);
+                    } else {
+                      await box.put(pdfUrl, {
+                        'url': pdf['url'],
+                        'name': pdf['name'],
+                      });
+                    }
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+        body: SfPdfViewer.network(pdfUrl),
       ),
-      body: SfPdfViewer.network(pdfUrl),
     );
   }
 }

@@ -54,10 +54,7 @@ class MyApp extends StatelessWidget {
           textDirection: TextDirection.rtl,
           child: ProgramPage(),
         ),
-        'profilesettings': (context) => Directionality(
-          textDirection: TextDirection.rtl,
-          child: ProfileSettings(),
-        ),
+
         'privacypolicy': (context) => Directionality(textDirection: TextDirection.rtl,child: PrivacyPolicy()),
         'helpandsupport': (context) => Directionality(
           textDirection: TextDirection.rtl,

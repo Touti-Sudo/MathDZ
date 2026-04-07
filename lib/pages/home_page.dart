@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mathdz/components/discord_tile.dart';
@@ -6,6 +7,7 @@ import 'package:mathdz/pages/home_page_content.dart';
 import 'package:mathdz/pages/profile_page.dart';
 import 'package:mathdz/pages/program_page.dart';
 import 'package:mathdz/services/profile_avatare.dart';
+import 'package:mathdz/services/profile_status.dart';
 import 'package:share_plus/share_plus.dart';
 
 class HomePage extends StatefulWidget {
@@ -24,7 +26,25 @@ class _HomePageState extends State<HomePage> {
   }
 
   final user = FirebaseAuth.instance.currentUser;
+@override
+void initState() {
+  super.initState();
 
+
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid != null) {
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        final savedPath = doc.data()?['profilePicture'] as String?;
+        ProfileStatus.initProfilePicture(savedPath);
+      }
+    });
+  }
+}
   void shareApp() {
     Share.share(
       'اطلع على MathDZ 📘\n\n'
@@ -84,7 +104,8 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-        endDrawer: Directionality(textDirection: TextDirection.rtl,
+        endDrawer: Directionality(
+          textDirection: TextDirection.rtl,
           child: Drawer(
             child: Column(
               children: [
@@ -100,7 +121,10 @@ class _HomePageState extends State<HomePage> {
                       end: Alignment.bottomCenter,
                     ),
                   ),
-                  child: Image.asset("assets/drawerBackground.png", height: 200),
+                  child: Image.asset(
+                    "assets/drawerBackground.png",
+                    height: 200,
+                  ),
                 ),
                 Expanded(
                   child: ListView(
@@ -127,7 +151,7 @@ class _HomePageState extends State<HomePage> {
                           });
                         },
                       ),
-          
+
                       ListTile(
                         leading: Icon(Icons.favorite),
                         title: Text("المفضلة"),
@@ -220,36 +244,28 @@ class _HomePageState extends State<HomePage> {
             Positioned(
               top: 40,
               right: 20,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 10, top: 8, bottom: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      width: 50,
-                      height: 50,
-                      decoration: const BoxDecoration(shape: BoxShape.circle),
-                      child: ProfileAvatar(
-                        imagePath: "assets/user.png",
-                        imageUrl: user?.photoURL,
+              child: ValueListenableBuilder<String?>(
+                valueListenable: ProfileStatus.profilePicturePath,
+                builder: (context, path, _) {
+                  return Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        width: 50,
+                        height: 50,
+                        child: ProfileAvatar(imagePath: path),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        right: 10,
-                        top: 8,
-                        bottom: 8,
-                      ),
-                      child: Text(
-                        user?.displayName ?? "anonymous",
-                        style: TextStyle(
+                      Text(
+                        FirebaseAuth.instance.currentUser?.displayName ??
+                            "anonymous",
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                },
               ),
             ),
           ],

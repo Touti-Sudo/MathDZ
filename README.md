@@ -24,7 +24,7 @@ The app provides structured math lessons through YouTube video tutorials and PDF
 
 Download the App here:
 
-[![Download](https://img.shields.io/badge/Download-APK-blue?style=for-the-badge&logo=android)](https://github.com/Touti-Sudo/MathDZ/releases/download/V1.0.0/app-release.apk)
+[![Download](https://img.shields.io/badge/Download-APK-blue?style=for-the-badge&logo=android)](https://github.com/Touti-Sudo/MathDZ/releases/download/V1.0.1/app-release.apk)
 
 ![Downloads](https://img.shields.io/github/downloads/Touti-Sudo/MathDZ/total)
 
